@@ -44,9 +44,10 @@ router.post('/', utils.handler(async (req, res) => {
 
     const ruleJson = JSON.stringify(ruleConfig);
     const id = hashCode(ruleJson);
+    const appName = getAppName(id);
 
     var appResponse = await ka.createApplication({
-        ApplicationName: getAppName(id),
+        ApplicationName: appName,
         ApplicationDescription: ruleJson,
         ApplicationCode: generateCode(ruleConfig),
         Inputs: [{
@@ -105,36 +106,14 @@ router.post('/', utils.handler(async (req, res) => {
         CloudWatchLoggingOptions: undefined
     }).promise();
 
-    var startResponse = await ka.startApplication({
-        ApplicationName: appResponse.ApplicationSummary.ApplicationName,
-        InputConfigurations: [{
-            Id: "1.1",
-            InputStartingPositionConfiguration: {
-                InputStartingPosition: "NOW"
-            }
-        }]
-    }).promise();
+    await start(appName);
 
-    const rule: Model.IRule = {
-        id: id,
-        config: ruleConfig,
-        status: Model.RuleStatus.STARTING,
-        metadata: { 
-            awsKa: {
-                createAppResponse: appResponse,
-                startAppResponse: startResponse,
-            }
-        }
-    };
-
-    res.json(rule);
+    res.json(await find(appName));
 }));
 
 router.get('/:id', utils.handler(async (req, res) => {
     const appName = getAppName(req.params.id);
-    const appDesc = await ka.describeApplication({ ApplicationName: appName }).promise();
-    
-    res.json(appToRule(appDesc.ApplicationDetail));
+    res.json(await find(appName));
 }));
 
 router.delete('/:id', utils.handler(async (req, res) => {
@@ -148,6 +127,26 @@ router.delete('/:id', utils.handler(async (req, res) => {
 
     res.json("OK");
 }));
+
+router.put('/:id/start', utils.handler(async (req, res) => {
+    const appName = getAppName(req.params.id);
+    await start(appName);
+
+    res.json(await find(appName));
+}));
+
+router.put('/:id/stop', utils.handler(async (req, res) => {
+    const appName = getAppName(req.params.id);
+    
+    await ka.stopApplication({ ApplicationName: appName }).promise();
+
+    res.json(await find(appName));
+}));
+
+async function find(appName: string) {
+    const appDesc = await ka.describeApplication({ ApplicationName: appName }).promise();
+    return appToRule(appDesc.ApplicationDetail);
+}
 
 function appToRule(x: AWS.KinesisAnalytics.Types.ApplicationDetail): Model.IRule {
     return { 
@@ -167,6 +166,18 @@ function generateCode(rule: Model.IRuleConfig): string {
     // "-- ** Aggregate (COUNT, AVG, etc.) + Sliding time window ** -- Performs function on the aggregate rows over a 10 second sliding window for a specified column. -- .----------. .----------. .----------. -- | SOURCE | | INSERT | | DESTIN. | -- Source-->| STREAM |-->| & SELECT |-->| STREAM |-->Destination -- | | | (PUMP) | | | -- '----------' '----------' '----------' -- STREAM (in-application): a continuously updated entity that you can SELECT from and INSERT into like a TABLE -- PUMP: an entity used to continuously 'SELECT ... FROM' a source STREAM, and INSERT SQL results into an output STREAM -- Create output stream, which can be used to send to a destination CREATE OR REPLACE STREAM "DESTINATION_SQL_STREAM" (ticker_symbol VARCHAR(4), ticker_symbol_count INTEGER); -- Create a pump which continuously selects from a source stream (SOURCE_SQL_STREAM_001) -- performs an aggregate count that is grouped by columns ticker over a 10-second sliding window CREATE OR REPLACE PUMP "STREAM_PUMP" AS INSERT INTO "DESTINATION_SQL_STREAM" -- COUNT|AVG|MAX|MIN|SUM|STDDEV_POP|STDDEV_SAMP|VAR_POP|VAR_SAMP) SELECT STREAM ticker_symbol, COUNT(*) OVER TEN_SECOND_SLIDING_WINDOW AS ticker_symbol_count FROM "SOURCE_SQL_STREAM_001" -- Results partitioned by ticker_symbol and a 10-second sliding time window WINDOW TEN_SECOND_SLIDING_WINDOW AS ( PARTITION BY ticker_symbol RANGE INTERVAL '10' SECOND PRECEDING); "
 }
 
+async function start(appName: string) {
+    return await ka.startApplication({
+        ApplicationName: appName,
+        InputConfigurations: [{
+            Id: "1.1",
+            InputStartingPositionConfiguration: {
+                InputStartingPosition: "NOW"
+            }
+        }]
+    }).promise();
+}
+
 function hashCode(input: string) {
 	var hash = 0;
 	if (input.length == 0) return hash;
@@ -179,4 +190,3 @@ function hashCode(input: string) {
 }
 
 module.exports = router;
-// export default router;
