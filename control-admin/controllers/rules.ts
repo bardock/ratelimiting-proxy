@@ -27,12 +27,7 @@ router.get('/', utils.handler(async (req, res) => {
         
         var pageApps = (await Promise.all(appDescPromises))
             .map(x => x.ApplicationDetail)
-            .map(x => <Model.IRule>{ 
-                id: x.ApplicationName.replace(appsPrefix, ""),
-                status: x.ApplicationStatus,
-                config: <Model.IRuleConfig>JSON.parse(x.ApplicationDescription),
-                metadata: {awsKa: x}
-            });
+            .map(x => appToRule(x));
 
         apps.push.apply(apps, pageApps);
 
@@ -135,6 +130,13 @@ router.post('/', utils.handler(async (req, res) => {
     res.json(rule);
 }));
 
+router.get('/:id', utils.handler(async (req, res) => {
+    const appName = getAppName(req.params.id);
+    const appDesc = await ka.describeApplication({ ApplicationName: appName }).promise();
+    
+    res.json(appToRule(appDesc.ApplicationDetail));
+}));
+
 router.delete('/:id', utils.handler(async (req, res) => {
     const appName = getAppName(req.params.id);
     const appDesc = await ka.describeApplication({ ApplicationName: appName }).promise();
@@ -146,6 +148,15 @@ router.delete('/:id', utils.handler(async (req, res) => {
 
     res.json("OK");
 }));
+
+function appToRule(x: AWS.KinesisAnalytics.Types.ApplicationDetail): Model.IRule {
+    return { 
+        id: x.ApplicationName.replace(appsPrefix, ""),
+        status: <Model.RuleStatus>x.ApplicationStatus,
+        config: <Model.IRuleConfig>JSON.parse(x.ApplicationDescription),
+        metadata: {awsKa: x}
+    };
+}
 
 function getAppName(id) {
     return `${appsPrefix}${id}`;

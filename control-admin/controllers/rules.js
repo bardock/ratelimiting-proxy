@@ -27,12 +27,7 @@ router.get('/', utils_1.default.handler((req, res) => __awaiter(this, void 0, vo
             .map(x => ka.describeApplication({ ApplicationName: x.ApplicationName }).promise());
         var pageApps = (yield Promise.all(appDescPromises))
             .map(x => x.ApplicationDetail)
-            .map(x => ({
-            id: x.ApplicationName.replace(appsPrefix, ""),
-            status: x.ApplicationStatus,
-            config: JSON.parse(x.ApplicationDescription),
-            metadata: { awsKa: x }
-        }));
+            .map(x => appToRule(x));
         apps.push.apply(apps, pageApps);
         hasMoreApps = data.HasMoreApplications;
     }
@@ -124,6 +119,11 @@ router.post('/', utils_1.default.handler((req, res) => __awaiter(this, void 0, v
     };
     res.json(rule);
 })));
+router.get('/:id', utils_1.default.handler((req, res) => __awaiter(this, void 0, void 0, function* () {
+    const appName = getAppName(req.params.id);
+    const appDesc = yield ka.describeApplication({ ApplicationName: appName }).promise();
+    res.json(appToRule(appDesc.ApplicationDetail));
+})));
 router.delete('/:id', utils_1.default.handler((req, res) => __awaiter(this, void 0, void 0, function* () {
     const appName = getAppName(req.params.id);
     const appDesc = yield ka.describeApplication({ ApplicationName: appName }).promise();
@@ -133,6 +133,14 @@ router.delete('/:id', utils_1.default.handler((req, res) => __awaiter(this, void
     }).promise();
     res.json("OK");
 })));
+function appToRule(x) {
+    return {
+        id: x.ApplicationName.replace(appsPrefix, ""),
+        status: x.ApplicationStatus,
+        config: JSON.parse(x.ApplicationDescription),
+        metadata: { awsKa: x }
+    };
+}
 function getAppName(id) {
     return `${appsPrefix}${id}`;
 }
