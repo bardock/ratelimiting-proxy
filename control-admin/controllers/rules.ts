@@ -51,7 +51,7 @@ router.post('/', utils.handler(async (req, res) => {
     const id = hashCode(ruleJson);
 
     var appResponse = await ka.createApplication({
-        ApplicationName: `${appsPrefix}${id}`,
+        ApplicationName: getAppName(id),
         ApplicationDescription: ruleJson,
         ApplicationCode: generateCode(ruleConfig),
         Inputs: [{
@@ -134,6 +134,22 @@ router.post('/', utils.handler(async (req, res) => {
 
     res.json(rule);
 }));
+
+router.delete('/:id', utils.handler(async (req, res) => {
+    const appName = getAppName(req.params.id);
+    const appDesc = await ka.describeApplication({ ApplicationName: appName }).promise();
+
+    const result = await ka.deleteApplication({ 
+        ApplicationName: appName,
+        CreateTimestamp: appDesc.ApplicationDetail.CreateTimestamp
+    }).promise();
+
+    res.json("OK");
+}));
+
+function getAppName(id) {
+    return `${appsPrefix}${id}`;
+}
 
 function generateCode(rule: Model.IRuleConfig): string {
     return "TO-DO";
