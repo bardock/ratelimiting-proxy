@@ -10,17 +10,6 @@ const ka = new AWS.KinesisAnalytics();
 
 const router = express.Router();
 
-router.get('/ka', utils.handler(async (req, res) => {
-    var data = await ka.listApplications().promise();
-        
-    var appDescPromises = data.ApplicationSummaries
-        .map(x => ka.describeApplication({ ApplicationName: x.ApplicationName }).promise());
-    
-    var apps = (await Promise.all(appDescPromises));
-
-    res.json(apps);
-}));
-
 const proxyName = "test1";
 const appsPrefix = `${proxyName}-ratelimitingproxy-`;
 

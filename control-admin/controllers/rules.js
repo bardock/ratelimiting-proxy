@@ -15,13 +15,6 @@ const Model = require("../models/rule");
 AWS.config.update({ region: 'us-east-1' });
 const ka = new AWS.KinesisAnalytics();
 const router = express.Router();
-router.get('/ka', utils_1.default.handler((req, res) => __awaiter(this, void 0, void 0, function* () {
-    var data = yield ka.listApplications().promise();
-    var appDescPromises = data.ApplicationSummaries
-        .map(x => ka.describeApplication({ ApplicationName: x.ApplicationName }).promise());
-    var apps = (yield Promise.all(appDescPromises));
-    res.json(apps);
-})));
 const proxyName = "test1";
 const appsPrefix = `${proxyName}-ratelimitingproxy-`;
 router.get('/', utils_1.default.handler((req, res) => __awaiter(this, void 0, void 0, function* () {
