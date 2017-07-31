@@ -11,6 +11,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("./utils");
 const client_1 = require("./client");
 class CreateCommandHandler {
+    constructor(_appConfig) {
+        this._appConfig = _appConfig;
+    }
     handle(msg) {
         return __awaiter(this, void 0, void 0, function* () {
             const appName = utils_1.default.getAppName(msg.id);
@@ -18,70 +21,9 @@ class CreateCommandHandler {
                 ApplicationName: appName,
                 ApplicationDescription: msg.configJson,
                 ApplicationCode: this.generateCode(msg),
-                Inputs: [{
-                        NamePrefix: "SOURCE_SQL_STREAM",
-                        KinesisStreamsInput: {
-                            ResourceARN: "arn:aws:kinesis:us-east-1:715535454808:stream/ratelimiting-proxy-test-input",
-                            RoleARN: "arn:aws:iam::715535454808:role/service-role/kinesis-analytics-test1-ratelimitingproxy-123-us-east-1"
-                        },
-                        InputSchema: {
-                            RecordFormat: {
-                                RecordFormatType: "JSON",
-                                MappingParameters: {
-                                    JSONMappingParameters: {
-                                        RecordRowPath: "$"
-                                    }
-                                }
-                            },
-                            RecordEncoding: "UTF-8",
-                            RecordColumns: [
-                                {
-                                    Name: "receivedOn",
-                                    Mapping: "$.receivedOn",
-                                    SqlType: "TIMESTAMP"
-                                },
-                                {
-                                    Name: "ip",
-                                    Mapping: "$.ip",
-                                    SqlType: "VARCHAR(16)"
-                                },
-                                {
-                                    Name: "host",
-                                    Mapping: "$.host",
-                                    SqlType: "VARCHAR(100)"
-                                },
-                                {
-                                    Name: "path",
-                                    Mapping: "$.path",
-                                    SqlType: "VARCHAR(256)"
-                                },
-                                {
-                                    Name: "queryString",
-                                    Mapping: "$.queryString",
-                                    SqlType: "VARCHAR(256)"
-                                },
-                                {
-                                    Name: "userAgent",
-                                    Mapping: "$.userAgent",
-                                    SqlType: "VARCHAR(256)"
-                                }
-                            ]
-                        },
-                        InputParallelism: {
-                            Count: 1
-                        }
-                    }],
-                Outputs: [{
-                        Name: "DESTINATION_SQL_STREAM",
-                        KinesisStreamsOutput: {
-                            ResourceARN: "arn:aws:kinesis:us-east-1:715535454808:stream/ratelimiting-proxy-test-overruns",
-                            RoleARN: "arn:aws:iam::715535454808:role/service-role/kinesis-analytics-test-ratelimitingproxy-ip_1000rps-us-east-1"
-                        },
-                        DestinationSchema: {
-                            RecordFormatType: "JSON"
-                        }
-                    }],
-                CloudWatchLoggingOptions: undefined
+                Inputs: this._appConfig.inputs,
+                Outputs: this._appConfig.outputs,
+                CloudWatchLoggingOptions: this._appConfig.cloudWatchLoggingOptions
             }).promise();
         });
     }
