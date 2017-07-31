@@ -3,12 +3,9 @@
 import express = require('express');
 
 /**
- * TODO
- * 
- * @param {any} fn 
- * @returns 
+ * Catch async errors and send to express middleware
  */
-function handler(fn: express.RequestHandler): express.RequestHandler {  
+function decorate(fn: express.RequestHandler): express.RequestHandler {  
     return (req, res, next) => {
         const routePromise = fn(req, res, next);
         if (routePromise.catch) {
@@ -18,5 +15,5 @@ function handler(fn: express.RequestHandler): express.RequestHandler {
 }
 
 export default {
-    handler: handler
+    decorate: decorate
 };

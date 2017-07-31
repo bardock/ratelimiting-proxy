@@ -1,192 +1,78 @@
 "use strict";
+import { CreateCommand } from '../services/rules/CreateCommand';
 
-import AWS = require('aws-sdk');
-import express = require('express');
+import config from '../config';
 import utils from '../utils';
-import * as Model from '../models/rule';
-
-AWS.config.update({region: 'us-east-1'});
-const ka = new AWS.KinesisAnalytics();
+import { IRuleConfig } from '../models/rule';
+import express = require('express');
 
 const router = express.Router();
+const handlers = config.rules.handlers;
 
-const proxyName = "test1";
-const appsPrefix = `${proxyName}-ratelimitingproxy-`;
+router.get('/', utils.decorate(async (req, res) => {
+    const data = await handlers
+        .findAllQueryHandler()
+        .handle({});
 
-router.get('/', utils.handler(async (req, res) => {
-
-    var hasMoreApps = true;
-    var apps = [];
-
-    while(hasMoreApps) {
-        var data = await ka.listApplications().promise();
-        
-        var appDescPromises = data.ApplicationSummaries
-            .filter(x => x.ApplicationName.startsWith(appsPrefix))
-            .map(x => ka.describeApplication({ ApplicationName: x.ApplicationName }).promise());
-        
-        var pageApps = (await Promise.all(appDescPromises))
-            .map(x => x.ApplicationDetail)
-            .map(x => appToRule(x));
-
-        apps.push.apply(apps, pageApps);
-
-        hasMoreApps = data.HasMoreApplications;
-    }
-
-    res.json(apps);
+    res.json(data);
 }));
 
-router.post('/', utils.handler(async (req, res) => {
+router.post('/', utils.decorate(async (req, res) => {
+    const cmd = new CreateCommand(req.body);
 
-    const ruleConfig: Model.IRuleConfig = req.body;
-    //TODO validate and normalize
+    await handlers
+        .createCommandHandler()
+        .handle(cmd);
 
-    const ruleJson = JSON.stringify(ruleConfig);
-    const id = hashCode(ruleJson);
-    const appName = getAppName(id);
+    await handlers
+        .startCommandHandler()
+        .handle({ id: cmd.id });
 
-    var appResponse = await ka.createApplication({
-        ApplicationName: appName,
-        ApplicationDescription: ruleJson,
-        ApplicationCode: generateCode(ruleConfig),
-        Inputs: [{
-            NamePrefix: "SOURCE_SQL_STREAM",
-            KinesisStreamsInput: {
-                ResourceARN: "arn:aws:kinesis:us-east-1:715535454808:stream/kinesis-analytics-demo-stream",
-                RoleARN: "arn:aws:iam::715535454808:role/service-role/kinesis-analytics-test-ratelimitingproxy-ip_1000rps-us-east-1"
-            },
-            InputSchema: {
-                RecordFormat: {
-                    RecordFormatType: "JSON",
-                    MappingParameters: {
-                        JSONMappingParameters: {
-                            RecordRowPath: "$"
-                        }
-                    }
-                },
-                RecordEncoding: "UTF-8",
-                RecordColumns: [
-                    {
-                        Name: "TICKER_SYMBOL",
-                        Mapping: "$.TICKER_SYMBOL",
-                        SqlType: "VARCHAR(4)"
-                    },
-                    {
-                        Name: "SECTOR",
-                        Mapping: "$.SECTOR",
-                        SqlType: "VARCHAR(16)"
-                    },
-                    {
-                        Name: "CHANGE",
-                        Mapping: "$.CHANGE",
-                        SqlType: "REAL"
-                    },
-                    {
-                        Name: "PRICE",
-                        Mapping: "$.PRICE",
-                        SqlType: "REAL"
-                    }
-                ]
-            },
-            InputParallelism: {
-                Count: 1
-            }
-        }],
-        Outputs: [{
-            Name: "DESTINATION_SQL_STREAM",
-            KinesisStreamsOutput: {
-                ResourceARN: "arn:aws:kinesis:us-east-1:715535454808:stream/ratelimiting-proxy-test-overruns",
-                RoleARN: "arn:aws:iam::715535454808:role/service-role/kinesis-analytics-test-ratelimitingproxy-ip_1000rps-us-east-1"
-            },
-            DestinationSchema: {
-                RecordFormatType: "JSON"
-            }
-        }],
-        CloudWatchLoggingOptions: undefined
-    }).promise();
+    const data = await handlers
+        .findByIdQueryHandler()
+        .handle({ id: cmd.id });
 
-    await start(appName);
-
-    res.json(await find(appName));
+    res.json(data);
 }));
 
-router.get('/:id', utils.handler(async (req, res) => {
-    const appName = getAppName(req.params.id);
-    res.json(await find(appName));
+router.get('/:id', utils.decorate(async (req, res) => {
+    const data = await handlers
+        .findByIdQueryHandler()
+        .handle({ id: req.params.id });
+
+    res.json(data);
 }));
 
-router.delete('/:id', utils.handler(async (req, res) => {
-    const appName = getAppName(req.params.id);
-    const appDesc = await ka.describeApplication({ ApplicationName: appName }).promise();
-
-    const result = await ka.deleteApplication({ 
-        ApplicationName: appName,
-        CreateTimestamp: appDesc.ApplicationDetail.CreateTimestamp
-    }).promise();
+router.delete('/:id', utils.decorate(async (req, res) => {
+    await handlers
+        .deleteCommandHandler()
+        .handle({ id: req.params.id });
 
     res.json("OK");
 }));
 
-router.put('/:id/start', utils.handler(async (req, res) => {
-    const appName = getAppName(req.params.id);
-    await start(appName);
+router.put('/:id/start', utils.decorate(async (req, res) => {
+    await handlers
+        .startCommandHandler()
+        .handle({ id: req.params.id });
 
-    res.json(await find(appName));
+    const data = await handlers
+        .findByIdQueryHandler()
+        .handle({ id: req.params.id });
+
+    res.json(data);
 }));
 
-router.put('/:id/stop', utils.handler(async (req, res) => {
-    const appName = getAppName(req.params.id);
-    
-    await ka.stopApplication({ ApplicationName: appName }).promise();
+router.put('/:id/stop', utils.decorate(async (req, res) => {
+    await handlers
+        .stopCommandHandler()
+        .handle({ id: req.params.id });
 
-    res.json(await find(appName));
+    const data = await handlers
+        .findByIdQueryHandler()
+        .handle({ id: req.params.id });
+
+    res.json(data);
 }));
-
-async function find(appName: string) {
-    const appDesc = await ka.describeApplication({ ApplicationName: appName }).promise();
-    return appToRule(appDesc.ApplicationDetail);
-}
-
-function appToRule(x: AWS.KinesisAnalytics.Types.ApplicationDetail): Model.IRule {
-    return { 
-        id: x.ApplicationName.replace(appsPrefix, ""),
-        status: <Model.RuleStatus>x.ApplicationStatus,
-        config: <Model.IRuleConfig>JSON.parse(x.ApplicationDescription),
-        metadata: {awsKa: x}
-    };
-}
-
-function getAppName(id) {
-    return `${appsPrefix}${id}`;
-}
-
-function generateCode(rule: Model.IRuleConfig): string {
-    return "TO-DO";
-    // "-- ** Aggregate (COUNT, AVG, etc.) + Sliding time window ** -- Performs function on the aggregate rows over a 10 second sliding window for a specified column. -- .----------. .----------. .----------. -- | SOURCE | | INSERT | | DESTIN. | -- Source-->| STREAM |-->| & SELECT |-->| STREAM |-->Destination -- | | | (PUMP) | | | -- '----------' '----------' '----------' -- STREAM (in-application): a continuously updated entity that you can SELECT from and INSERT into like a TABLE -- PUMP: an entity used to continuously 'SELECT ... FROM' a source STREAM, and INSERT SQL results into an output STREAM -- Create output stream, which can be used to send to a destination CREATE OR REPLACE STREAM "DESTINATION_SQL_STREAM" (ticker_symbol VARCHAR(4), ticker_symbol_count INTEGER); -- Create a pump which continuously selects from a source stream (SOURCE_SQL_STREAM_001) -- performs an aggregate count that is grouped by columns ticker over a 10-second sliding window CREATE OR REPLACE PUMP "STREAM_PUMP" AS INSERT INTO "DESTINATION_SQL_STREAM" -- COUNT|AVG|MAX|MIN|SUM|STDDEV_POP|STDDEV_SAMP|VAR_POP|VAR_SAMP) SELECT STREAM ticker_symbol, COUNT(*) OVER TEN_SECOND_SLIDING_WINDOW AS ticker_symbol_count FROM "SOURCE_SQL_STREAM_001" -- Results partitioned by ticker_symbol and a 10-second sliding time window WINDOW TEN_SECOND_SLIDING_WINDOW AS ( PARTITION BY ticker_symbol RANGE INTERVAL '10' SECOND PRECEDING); "
-}
-
-async function start(appName: string) {
-    return await ka.startApplication({
-        ApplicationName: appName,
-        InputConfigurations: [{
-            Id: "1.1",
-            InputStartingPositionConfiguration: {
-                InputStartingPosition: "NOW"
-            }
-        }]
-    }).promise();
-}
-
-function hashCode(input: string) {
-	var hash = 0;
-	if (input.length == 0) return hash;
-	for (var i = 0; i < input.length; i++) {
-		const char = input.charCodeAt(i);
-		hash = ((hash<<5)-hash)+char;
-		hash = hash & hash; // Convert to 32bit integer
-	}
-	return hash;
-}
 
 module.exports = router;

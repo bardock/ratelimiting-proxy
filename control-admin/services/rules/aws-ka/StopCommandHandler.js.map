@@ -1,0 +1,1 @@
+{"version":3,"file":"StopCommandHandler.js","sourceRoot":"","sources":["StopCommandHandler.ts"],"names":[],"mappings":";;;;;;;;;;AAEA,mCAA4B;AAC5B,qCAA8B;AAE9B;IAEiB,MAAM,CAAC,GAAoB;;YACpC,MAAM,OAAO,GAAG,eAAK,CAAC,UAAU,CAAC,GAAG,CAAC,EAAE,CAAC,CAAC;YAEzC,MAAM,gBAAM,CAAC,eAAe,CAAC,EAAE,eAAe,EAAE,OAAO,EAAE,CAAC,CAAC,OAAO,EAAE,CAAC;QACzE,CAAC;KAAA;CACJ;AAPD,gDAOC"}

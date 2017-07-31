@@ -1,12 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
- * TODO
- *
- * @param {any} fn
- * @returns
+ * Catch async errors and send to express middleware
  */
-function handler(fn) {
+function decorate(fn) {
     return (req, res, next) => {
         const routePromise = fn(req, res, next);
         if (routePromise.catch) {
@@ -15,6 +12,6 @@ function handler(fn) {
     };
 }
 exports.default = {
-    handler: handler
+    decorate: decorate
 };
 //# sourceMappingURL=utils.js.map

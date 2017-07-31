@@ -8,16 +8,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express = require("express");
-const bodyParser = require("body-parser");
 const utils_1 = require("./utils");
-const app = express();
-app.use(bodyParser.json());
-app.use('/rules', require('./controllers/rules'));
-app.get('/', utils_1.default.decorate((req, res, next) => __awaiter(this, void 0, void 0, function* () {
-    res.send('Welcome');
-})));
-app.listen(8081, () => {
-    console.log('Example app listening on port 8081!');
-});
-//# sourceMappingURL=app.js.map
+const client_1 = require("./client");
+class DeleteCommandHandler {
+    handle(msg) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const appName = utils_1.default.getAppName(msg.id);
+            const appDesc = yield client_1.default.describeApplication({ ApplicationName: appName }).promise();
+            const result = yield client_1.default.deleteApplication({
+                ApplicationName: appName,
+                CreateTimestamp: appDesc.ApplicationDetail.CreateTimestamp
+            }).promise();
+        });
+    }
+}
+exports.DeleteCommandHandler = DeleteCommandHandler;
+//# sourceMappingURL=DeleteCommandHandler.js.map

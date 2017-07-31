@@ -10,7 +10,7 @@ app.use(bodyParser.json());
 
 app.use('/rules', require('./controllers/rules'));
 
-app.get('/', utils.handler(async (req, res, next) => {
+app.get('/', utils.decorate(async (req, res, next) => {
     res.send('Welcome');
 }));
 
