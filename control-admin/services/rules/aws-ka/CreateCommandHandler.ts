@@ -17,6 +17,9 @@ export class CreateCommandHandler implements ICommandHandler<CreateCommand> {
         private _appConfig: IKinesisAppConfig) 
     { }
 
+    public async handle2(): Promise<void> {
+        await new Promise(() => 1);
+    }
     public async handle(msg: CreateCommand): Promise<void> {
         const appName = utils.getAppName(msg.id);
 
