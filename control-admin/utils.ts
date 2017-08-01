@@ -1,6 +1,6 @@
 "use strict";
 
-import express = require('express');
+import * as express from "express";
 
 /**
  * Catch async errors and send to express middleware
