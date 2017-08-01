@@ -1,5 +1,5 @@
 // https://github.com/expressjs/api-error-handler
-import statuses from 'statuses';
+import * as statuses from 'statuses';
 
 var production = process.env.NODE_ENV === 'production';
 
