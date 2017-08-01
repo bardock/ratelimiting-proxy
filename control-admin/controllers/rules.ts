@@ -1,13 +1,13 @@
 "use strict";
 import { CreateCommand } from '../services/rules/CreateCommand';
 
-import config from '../config';
+import dep from '../config.dependecies';
 import utils from '../utils';
 import { IRuleConfig } from '../models/rule';
-import express = require('express');
+import * as express from "express";
 
 const router = express.Router();
-const handlers = config.rules.handlers;
+const handlers = dep.rules.handlers;
 
 router.get('/', utils.decorate(async (req, res) => {
     const data = await handlers

@@ -1,7 +1,7 @@
+import config from '../../../config';
 import { IRule, IRuleConfig, RuleStatus } from '../../../models/rule';
 
-const proxyName = "test1";
-const appsPrefix = `${proxyName}-ratelimitingproxy-`;
+const appsPrefix = `${config.proxyName}-ratelimitingproxy-`;
 
 export default {
     appsPrefix: appsPrefix,
