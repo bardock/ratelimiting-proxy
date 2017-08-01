@@ -5,13 +5,18 @@ An implementation for AWS Kinesis is included.
 
 ## Setup
 
-### Build
+### Getting started
 
-The only requirement of this application is the Node Package Manager. All other dependencies can be installed with:
+To get the Node server running locally:
 
-    npm install
+* `npm install` to install all required dependencies
+* `npm start` to start the local server
 
-### Kinesis Stream
+To get rid of generated files:
+
+* `npm run clean`
+
+### Kinesis Streams
 
 You need to create one stream for input and another for output.
 Then configure them in `config.ts` file.
