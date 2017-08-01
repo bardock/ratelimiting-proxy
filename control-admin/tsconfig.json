@@ -1,9 +1,14 @@
 {
     "compilerOptions": {
-		"outDir": "build",
         "target": "es2015",
         "module": "commonjs",
-        "sourceMap": false,
-        "watch": false
-    }
+        "sourceMap": true,
+        "watch": false,
+		"outDir": "build",
+        "mapRoot": "build"
+    },
+    "exclude": [
+        "node_modules",
+        "**/*.spec.ts"
+    ]
 }
