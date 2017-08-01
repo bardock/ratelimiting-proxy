@@ -1,8 +1,9 @@
 {
     "compilerOptions": {
+		"outDir": "build",
         "target": "es2015",
         "module": "commonjs",
-        "sourceMap": true,
+        "sourceMap": false,
         "watch": false
     }
 }
