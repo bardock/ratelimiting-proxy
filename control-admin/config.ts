@@ -1,6 +1,7 @@
 import rulesAwsHandlersFactory from './services/rules/aws-ka/factory'
 
 export default {
+	port: process.env.PORT || 8081,
     rules: {
         handlers: rulesAwsHandlersFactory({
             app: {
