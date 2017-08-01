@@ -30,6 +30,13 @@ export class CreateCommandHandler implements ICommandHandler<CreateCommand> {
         }).promise();
     }
 
+    /**
+     * Generates the SQL code for the Analytics app that aggregates requests 
+     * based on rule criteria and filters and keeps overruns.
+     * @param {CreateCommand} cmd object with rule values. It *MUST* be a validated CreateCommand, 
+     * otherwise could have SQL injection
+     * @returns {string} SQL code
+     */
     private generateCode(cmd: CreateCommand): string {
         // TODO: support multiple criteria fields
         var criteria = Object.keys(cmd.config.criterias)[0];
@@ -56,5 +63,6 @@ export class CreateCommandHandler implements ICommandHandler<CreateCommand> {
                     RANGE INTERVAL '${cmd.config.windowTimeSize}' ${cmd.config.windowTimeUnit} PRECEDING)
                 ) as x
                 WHERE REQUESTS_COUNT > ${cmd.config.requestsLimit};`;
+        // TODO: filter by criteria value
     }
 }

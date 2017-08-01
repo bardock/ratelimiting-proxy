@@ -21,7 +21,7 @@ export const enum RuleStatus {
     UPDATING="UPDATING"
 }
 
-export const enum TimeUnit {
+export enum TimeUnit {
     SECOND="SECOND",
     MINUTE="MINUTE",
     HOUR="HOUR"
