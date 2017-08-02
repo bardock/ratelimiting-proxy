@@ -4,6 +4,7 @@ import { IRule, IRuleConfig, RuleStatus, TimeUnit } from '../../../models/rule';
 import { FindByIdQueryHandler } from './FindByIdQueryHandler';
 import { DescribeApplicationResponse, DescribeApplicationRequest, ApplicationDetail } from "aws-sdk/clients/kinesisanalytics";
 
+import * as faker from 'faker';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
@@ -48,19 +49,20 @@ describe('FindByIdQueryHandler', function() {
   });
 
   function createValidFixture() {
-    const id = "123";
+    const $ = faker.random;
+    const id = $.word();
     return {
       id: id,
       appDetail: {
         ApplicationName: `${config.proxyName}-ratelimitingproxy-${id}`,
-        ApplicationStatus: RuleStatus.STARTING,
+        ApplicationStatus: RuleStatus[$.arrayElement(Object.keys(RuleStatus))],
         ApplicationDescription: JSON.stringify(<IRuleConfig>{ 
-          criterias: { "ip": "*" }, 
-          requestsLimit: 1, 
-          windowTimeSize: 1, 
-          windowTimeUnit: TimeUnit.MINUTE 
+          criterias: { "ip": faker.internet.ip() }, 
+          requestsLimit: $.number(), 
+          windowTimeSize: $.number(), 
+          windowTimeUnit: TimeUnit[$.arrayElement(Object.keys(TimeUnit))]
         }),
-        ApplicationVersionId: 1
+        ApplicationVersionId: $.number()
       }
     };
   }

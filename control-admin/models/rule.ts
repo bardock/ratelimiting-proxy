@@ -12,7 +12,7 @@ export interface IRuleConfig {
     windowTimeUnit: TimeUnit
 }
 
-export const enum RuleStatus {
+export enum RuleStatus {
     DELETING="DELETING",
     STARTING="STARTING",
     STOPPING="STOPPING",
