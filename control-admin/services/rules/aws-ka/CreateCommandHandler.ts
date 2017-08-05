@@ -1,15 +1,9 @@
+import { IKinesisAppConfig } from './IKinesisAppConfig';
 import { CreateCommand } from '../CreateCommand';
 import { IRule, IRuleConfig, RuleStatus } from '../../../models/rule';
 import { ICommandHandler, IQueryHandler } from '../../abstractions';
 import utils from './utils';
 import client from './client';
-import { Inputs, Outputs, CloudWatchLoggingOptions } from "aws-sdk/clients/kinesisanalytics";
-
-export interface IKinesisAppConfig {
-    inputs?: Inputs, 
-    outputs?: Outputs, 
-    cloudWatchLoggingOptions?: CloudWatchLoggingOptions
-}
 
 export class CreateCommandHandler implements ICommandHandler<CreateCommand> {
 

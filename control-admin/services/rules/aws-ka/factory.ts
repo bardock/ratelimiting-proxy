@@ -1,5 +1,6 @@
 import { IRuleServicesFactory } from '../../abstractions';
-import { CreateCommandHandler, IKinesisAppConfig } from './CreateCommandHandler';
+import { IKinesisAppConfig } from './IKinesisAppConfig';
+import { CreateCommandHandler } from './CreateCommandHandler';
 import { StopCommandHandler } from './StopCommandHandler';
 import { DeleteCommandHandler } from './DeleteCommandHandler';
 import { FindAllQueryHandler } from './FindAllQueryHandler';
