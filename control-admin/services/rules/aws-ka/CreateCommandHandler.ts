@@ -40,7 +40,7 @@ export class CreateCommandHandler implements ICommandHandler<CreateCommand> {
                     CONTROL_FIELD VARCHAR(50), 
                     CONTROL_VALUE VARCHAR(200), 
                     REQUESTS_COUNT INTEGER,
-                    FIRST_REQUEST_RECEIVED_ON TIMESTAMP
+                    EXPIRES_ON TIMESTAMP
                 );
                 CREATE OR REPLACE PUMP "STREAM_PUMP" AS INSERT INTO "DESTINATION_SQL_STREAM"
                 SELECT * FROM (
@@ -49,7 +49,9 @@ export class CreateCommandHandler implements ICommandHandler<CreateCommand> {
                         '${criteria}' as CONTROL_FIELD, 
                         "${criteria}" as CONTROL_VALUE, 
                         COUNT(*) OVER SLIDING_WINDOW AS REQUESTS_COUNT,
-                        MIN("receivedOn") OVER SLIDING_WINDOW AS FIRST_REQUEST_RECEIVED_ON
+                        (MIN("receivedOn") OVER SLIDING_WINDOW) 
+                            + INTERVAL '${cmd.config.windowTimeSize}' ${cmd.config.windowTimeUnit} 
+                            AS EXPIRES_ON
                     FROM "SOURCE_SQL_STREAM_001"
                     -- Results partitioned by ticker_symbol and a 10-second sliding time window 
                     WINDOW SLIDING_WINDOW AS (
