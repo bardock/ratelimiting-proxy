@@ -16,3 +16,7 @@ IMPORTANT: Your Lambda and your Redis must use the same VPC, Subnet and Security
 	* You can run `npm install`, zip this folder content and upload it to aws
 1. Configure redis host (Elasticache DNS or EC2 private DNS) and port
 1. You can test de Lambda function using the "Kinesis" sample event template
+1. Setup Kinesis as trigger
+	* Kinesis stream: the output used in [control-admin](../control-admin)
+	* Batch size: `1`
+	* Starting position: `Latest`
