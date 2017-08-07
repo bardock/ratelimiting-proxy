@@ -26,7 +26,8 @@ This repo includes an implementation using AWS Kinesis.
 
 ## Components
 
-* [Web API for Control](control-admin/)
-* Lua client for AWS Kinesis (send requests/response info)
-* Lua client for Redis (check rate limit)
-* AWS Kinesis Analytics app and Elasticsearch+Kibana for usage metrics
+1. Lua client for AWS Kinesis (send requests/response info)
+1. [Analytics and Web API for Control](control-admin/)
+1. [Bans Publisher](bans-publisher/) (publish detected overruns to Redis)
+1. Lua client for Redis (subscribe to published bans)
+1. AWS Kinesis Analytics app and Elasticsearch+Kibana for usage metrics
