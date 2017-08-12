@@ -7,9 +7,4 @@ local data = {
     }
 }
 
--- function _M.get_val(name)
---     return data[name]
--- end
-
--- return _M
 return data;
