@@ -9,8 +9,8 @@ nginx setup
 	1. mkdir logs
 	1. openresty -p `pwd`/ -c nginx.conf
 1. Start mock-server: 
-	1. mkdir logs/mock-server
-	1. openresty -p `pwd`/ -c mock-server.conf
+	1. mkdir -p mock-server/logs
+	1. openresty -p `pwd`/mock-server -c nginx.conf
 1. Test: 
 	* curl http://localhost:8080/debug
 	* curl http://localhost:8080/debug/redis
